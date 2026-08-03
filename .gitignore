@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Machine-specific Claude Code permissions
+.claude/settings.local.json
+
+# The snapshot is private design system data — see SCHEMA.md for the format.
+# graph.example.json is the committed exception.
+snapshot/*
+!snapshot/graph.example.json
+viewer/src/graph.json
+
+# Internal handoff notes — names a specific private library and its roadmap.
+HANDOFF.md
