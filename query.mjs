@@ -5,16 +5,29 @@
 //   node query.mjs --orphans           defined but nothing uses them
 //   node query.mjs --strays            components reaching past tokens to raw values
 //   node query.mjs --dupes             same name living in two collections
-import fs from "node:fs";
+//
+// Reads a ds-snapshot directly — the newest in ds-snapshots/ unless one is named
+// with --snapshot <path>. Same snapshot the viewer opens, same interpretation of
+// it (lib/snapshot-graph.mjs), so the two can never disagree.
+import { resolveSnapshot, SnapshotError } from "./lib/read-snapshot.mjs";
+import { snapshotGraph } from "./lib/snapshot-graph.mjs";
 
-// The real snapshot isn't committed (see SCHEMA.md), so fall back to the
-// example rather than crashing on a fresh clone.
-const GRAPH = fs.existsSync("snapshot/graph.json")
-  ? "snapshot/graph.json"
-  : "snapshot/graph.example.json";
-if (GRAPH.endsWith("example.json"))
-  console.log("no snapshot/graph.json — using the example graph\n");
-const graph = JSON.parse(fs.readFileSync(GRAPH, "utf8"));
+const args = process.argv.slice(2);
+const at = args.indexOf("--snapshot");
+const target = at === -1 ? undefined : args.splice(at, 2)[1];
+
+let source;
+let graph;
+try {
+  source = resolveSnapshot(target);
+  const built = snapshotGraph(source.files);
+  graph = built.graph;
+  if (source.isExample) console.log(`no snapshot in ds-snapshots/ — using ${source.target}\n`);
+  for (const w of built.warnings) console.log(`note: ${w}\n`);
+} catch (e) {
+  console.error(e instanceof SnapshotError ? e.message : e);
+  process.exit(1);
+}
 const nodes = new Map(graph.nodes.map((n) => [n.id, n]));
 
 const incoming = new Map();
@@ -23,19 +36,22 @@ for (const e of graph.edges) {
   incoming.get(e.to).push(e);
 }
 
-// A mode value is one of three things: an alias to another variable, a colour
-// object, or a plain number. All three are objects to `typeof`, so check shape.
+// Design token values follow the Design Tokens standard: a reference to another
+// token written "{some.other.token}", a colour object, a size object with a unit,
+// or a plain number or string.
 function renderValue(v) {
-  if (v && typeof v === "object" && v.alias) {
-    const t = nodes.get(v.alias);
-    return `→ ${t ? t.id : v.alias}`;
+  if (typeof v === "string") {
+    const ref = v.match(/^\{([^{}]+)\}$/);
+    if (!ref) return v;
+    const t = nodes.get(ref[1]);
+    return `→ ${t ? t.id : ref[1]}`;
   }
-  if (v && typeof v === "object" && typeof v.r === "number") {
-    const hex = (c) =>
-      Math.round(c * 255)
-        .toString(16)
-        .padStart(2, "0");
-    return `#${hex(v.r)}${hex(v.g)}${hex(v.b)}${v.a < 1 ? ` (${Math.round(v.a * 100)}%)` : ""}`;
+  if (v && typeof v === "object") {
+    if (Array.isArray(v.components)) {
+      const alpha = v.alpha < 1 ? ` (${Math.round(v.alpha * 100)}%)` : "";
+      return `${v.hex ?? "#?"}${alpha}`;
+    }
+    if (typeof v.value === "number") return `${v.value}${v.unit ?? ""}`;
   }
   return String(v);
 }
@@ -57,7 +73,7 @@ function dependents(startId) {
   return { seen, via };
 }
 
-const arg = process.argv[2];
+const arg = args[0];
 
 if (arg === "--orphans") {
   const used = new Set(graph.edges.map((e) => e.to));
@@ -146,6 +162,8 @@ if (arg === "--orphans") {
   console.log("");
 } else {
   console.log(
-    "usage: node query.mjs <token-or-component>  |  --orphans  |  --strays  |  --dupes",
+    "usage: node query.mjs <token-or-component>  |  --orphans  |  --strays  |  --dupes\n" +
+      "       add --snapshot <folder-or-bundle> to read a snapshot other than the newest",
   );
+  console.log(`\nreading: ${source.target}`);
 }

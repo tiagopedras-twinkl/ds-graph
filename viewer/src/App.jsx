@@ -5,9 +5,10 @@ import ImpactPanel from "./components/ImpactPanel";
 import { loadGraph } from "./lib/graph";
 import {
   describeSnapshot,
+  emptyGraph,
   exampleSnapshot,
   initialSnapshot,
-  readSnapshotFile,
+  readSnapshotFiles,
 } from "./lib/snapshot";
 import "./App.css";
 
@@ -15,8 +16,9 @@ function App() {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [loadError, setLoadError] = useState(null);
   const fileInput = useRef(null);
-  const graph = useMemo(() => loadGraph(snapshot.graph), [snapshot]);
-  const summary = useMemo(() => describeSnapshot(snapshot.graph), [snapshot]);
+  const folderInput = useRef(null);
+  const graph = useMemo(() => loadGraph(snapshot?.graph ?? emptyGraph), [snapshot]);
+  const summary = useMemo(() => describeSnapshot(snapshot?.graph ?? emptyGraph), [snapshot]);
   // `nav` is the back/forward history of focused (map-centred) nodes.
   // `previewId` is a lighter-weight "more about this" peek that doesn't
   // touch history or recentre the map until the user explicitly focuses it.
@@ -53,13 +55,13 @@ function App() {
     setLoadError(null);
   };
 
-  const onPickFile = async (event) => {
-    const file = event.target.files?.[0];
-    // Clear it first, so picking the same file twice in a row still fires.
+  const onPick = async (event) => {
+    const picked = [...(event.target.files ?? [])];
+    // Clear it first, so picking the same thing twice in a row still fires.
     event.target.value = "";
-    if (!file) return;
+    if (picked.length === 0) return;
     try {
-      applySnapshot(await readSnapshotFile(file));
+      applySnapshot(await readSnapshotFiles(picked));
     } catch (e) {
       setLoadError(e.message);
     }
@@ -73,35 +75,45 @@ function App() {
           <span className="app-header-sub">design system dependency map</span>
         </div>
         <div className="app-header-right">
-          <span className="app-header-meta">
-            {summary.components} components · {summary.variables} variables ·{" "}
-            {summary.links.toLocaleString()} links
-            {summary.generatedAt ? ` · ${summary.generatedAt.toLocaleDateString()}` : ""}
-          </span>
-          <span
-            className={`snapshot-source${snapshot.isExample ? " is-example" : ""}`}
-            title={snapshot.isExample ? "Synthetic sample data, not a real library" : snapshot.source}
-          >
-            {snapshot.isExample ? "example data" : snapshot.source}
-          </span>
-          {!snapshot.isExample && (
-            <button className="snapshot-button" onClick={() => applySnapshot(exampleSnapshot)}>
-              Use example
-            </button>
+          {snapshot && (
+            <>
+              <span className="app-header-meta">
+                {summary.components} components · {summary.variables} variables ·{" "}
+                {summary.links.toLocaleString()} links
+                {summary.generatedAt ? ` · ${summary.generatedAt.toLocaleDateString()}` : ""}
+              </span>
+              <span
+                className={`snapshot-source${snapshot.isExample ? " is-example" : ""}`}
+                title={
+                  snapshot.isExample ? "Synthetic sample data, not a real library" : snapshot.source
+                }
+              >
+                {snapshot.isExample ? "example data" : snapshot.source}
+              </span>
+              {!snapshot.isExample && (
+                <button className="snapshot-button" onClick={() => applySnapshot(exampleSnapshot)}>
+                  Use example
+                </button>
+              )}
+            </>
           )}
           <button className="snapshot-button" onClick={() => fileInput.current?.click()}>
             Load snapshot…
           </button>
+          {/* Two inputs because a browser file picker either takes files or a
+              folder, never both. A snapshot can be handed over either way. */}
           <input
             ref={fileInput}
             type="file"
             accept=".json,application/json"
-            onChange={onPickFile}
+            multiple
+            onChange={onPick}
             hidden
           />
+          <input ref={folderInput} type="file" webkitdirectory="" directory="" onChange={onPick} hidden />
         </div>
       </header>
-      {loadError && (
+      {snapshot && loadError && (
         <div className="app-notice is-error" role="alert">
           <span>{loadError}</span>
           <button onClick={() => setLoadError(null)} aria-label="Dismiss">
@@ -109,7 +121,7 @@ function App() {
           </button>
         </div>
       )}
-      {!loadError && snapshot.warnings?.length > 0 && (
+      {snapshot && !loadError && snapshot.warnings?.length > 0 && (
         <div className="app-notice">
           <span>{snapshot.warnings.join(" ")}</span>
         </div>
@@ -129,6 +141,38 @@ function App() {
         </div>
         <ImpactPanel graph={graph} focusedId={focusedId} previewId={previewId} onFocus={focusNode} />
       </div>
+      {/* Nothing loaded yet: the shell behind stays empty and the only way
+          forward is picking a file or opting into the example on purpose. */}
+      {!snapshot && (
+        <div className="modal-backdrop">
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="start-modal-title">
+            <h2 id="start-modal-title">Open a snapshot</h2>
+            <p className="modal-body">
+              A snapshot is a dated capture of your Figma library. Open the single{" "}
+              <code>.bundle.json</code>, or the snapshot folder itself. Nothing is uploaded — it's
+              read here in the browser.
+            </p>
+            {loadError && (
+              <p className="modal-error" role="alert">
+                {loadError}
+              </p>
+            )}
+            <button className="modal-primary" autoFocus onClick={() => fileInput.current?.click()}>
+              Open snapshot file…
+            </button>
+            <p className="modal-alt">
+              <button className="modal-link" onClick={() => folderInput.current?.click()}>
+                Open a snapshot folder
+              </button>{" "}
+              instead, or{" "}
+              <button className="modal-link" onClick={() => applySnapshot(exampleSnapshot)}>
+                explore example data
+              </button>{" "}
+              — made-up components and tokens, not a real library.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

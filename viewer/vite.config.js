@@ -12,7 +12,12 @@ export default defineConfig({
   // subpath like /ds-graph/ on GitHub Pages. An absolute base would 404 the
   // favicon in both cases.
   base: './',
-  // snapshot/graph.example.json is the fallback graph and lives above this
-  // root, shared with the CLI so there's only one copy of it.
-  server: { fs: { allow: ['..'] } },
+  // The example snapshot and lib/snapshot-graph.mjs live above this root,
+  // shared with the CLI so there's only one copy of each.
+  // PORT is honoured so a harness that assigns a port (rather than taking Vite's
+  // own 5173-and-upwards search) opens the right one.
+  server: {
+    port: process.env.PORT ? Number(process.env.PORT) : undefined,
+    fs: { allow: ['..'] },
+  },
 })

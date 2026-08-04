@@ -5,7 +5,7 @@
 // walking incoming edges gives its dependents (what relies on it).
 export const KINDS = ["primitive", "token", "textStyle", "component"];
 
-// `graphData` is the parsed contents of a graph.json — either the one bundled
+// `graphData` is the map read out of a snapshot — either the one bundled
 // at build time or one the user loaded at runtime. See lib/snapshot.js.
 export function loadGraph(graphData) {
   const nodeById = new Map(graphData.nodes.map((n) => [n.id, n]));
@@ -20,19 +20,37 @@ export function loadGraph(graphData) {
   return { nodes: graphData.nodes, edges: graphData.edges, nodeById, outgoing, incoming };
 }
 
-// A mode value is one of three shapes, all objects to `typeof`: check
-// `.alias` first, then `.r` for a colour, else it's a plain number.
+// Design token values follow the Design Tokens standard, so a value is one of:
+// a reference to another token, written "{some.other.token}"; a colour object; a
+// size object with a unit; or a plain number or string.
 export function renderValue(value, nodeById) {
-  if (value && typeof value === "object" && value.alias) {
-    const t = nodeById.get(value.alias);
-    return `→ ${t ? t.id : value.alias}`;
+  if (typeof value === "string") {
+    const ref = value.match(/^\{([^{}]+)\}$/);
+    if (!ref) return value;
+    const target = nodeById.get(ref[1]);
+    return `→ ${target ? target.id : ref[1]}`;
   }
-  if (value && typeof value === "object" && typeof value.r === "number") {
-    const hex = (c) => Math.round(c * 255).toString(16).padStart(2, "0");
-    const alpha = value.a < 1 ? ` (${Math.round(value.a * 100)}%)` : "";
-    return `#${hex(value.r)}${hex(value.g)}${hex(value.b)}${alpha}`;
+  if (value && typeof value === "object") {
+    if (Array.isArray(value.components)) {
+      const alpha = value.alpha < 1 ? ` (${Math.round(value.alpha * 100)}%)` : "";
+      return `${value.hex ?? rgbHex(value.components)}${alpha}`;
+    }
+    if (typeof value.value === "number") return `${value.value}${value.unit ?? ""}`;
   }
   return String(value);
+}
+
+// Only needed for a colour whose snapshot omitted the optional hex field.
+function rgbHex(components) {
+  const c = (x) => Math.round(Math.min(1, Math.max(0, x)) * 255).toString(16).padStart(2, "0");
+  return `#${c(components[0])}${c(components[1])}${c(components[2])}`;
+}
+
+// The reference a token's value points at, or null when it holds a plain value.
+export function aliasTarget(value) {
+  if (typeof value !== "string") return null;
+  const ref = value.match(/^\{([^{}]+)\}$/);
+  return ref ? ref[1] : null;
 }
 
 // BFS in one direction, depth-limited. `edgeMap` is either `incoming`

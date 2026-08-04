@@ -1,38 +1,43 @@
-// Where the graph comes from: a built-in default at startup, or a file the user
-// picks at runtime so they can audit their own library without rebuilding.
+// Where the graph on screen comes from: a ds-snapshot the user opens, or a
+// built-in one at startup. The viewer reads snapshots and nothing else — there is
+// no intermediate file to go stale, and the format is exactly what the ds-snapshot
+// skill writes (see ../../../SCHEMA.md).
 //
-// The real snapshot is private and not committed (see SCHEMA.md), so
-// ../graph.json may legitimately be absent. `import.meta.glob` resolves to an
-// empty object in that case instead of failing the build, which a plain static
-// import cannot do.
+// A snapshot reaches the browser two ways, and both end up as the same map of
+// contract path -> parsed JSON that lib/snapshot-graph.mjs takes:
+//
+//   - one .bundle.json         the whole snapshot in a single file
+//   - a folder, or its files   manifest.json, tokens.json, tokens/<x>.json, …
 //
 // The example is imported rather than fetched on demand because the production
 // build is a single HTML file meant to open from file://, where fetch() of a
 // sibling file is blocked. Anything the viewer needs offline has to be bundled.
-import example from "../../../snapshot/graph.example.json";
-import { KINDS } from "./graph";
+import example from "../../../snapshot/example.snapshot.json";
+import { SnapshotError, filesFromBundle, snapshotGraph } from "../../../lib/snapshot-graph.mjs";
 
-const localModules = import.meta.glob("../graph.json", {
-  eager: true,
-  import: "default",
-});
+// ../snapshot.json is a private snapshot bundle, not committed (see SCHEMA.md),
+// so it may legitimately be absent. `import.meta.glob` resolves to an empty
+// object in that case instead of failing the build, which a static import cannot.
+const localModules = import.meta.glob("../snapshot.json", { eager: true, import: "default" });
 const local = Object.values(localModules)[0];
 
-const EDGE_TYPES = ["BINDS", "ALIASES", "NESTS", "USES_TEXT_STYLE"];
+function build(files, source, isExample) {
+  const { graph, warnings } = snapshotGraph(files);
+  return { graph, source, isExample, warnings };
+}
 
-export const exampleSnapshot = {
-  graph: example,
-  source: "built-in example",
-  isExample: true,
-  warnings: [],
-};
+export const exampleSnapshot = build(filesFromBundle(example), "built-in example", true);
 
-export const initialSnapshot = local
-  ? { graph: local, source: "snapshot/graph.json", isExample: false, warnings: [] }
-  : exampleSnapshot;
+// Null means "nothing loaded yet" — the viewer opens on a prompt to pick a
+// snapshot rather than silently showing the example, which reads as real data
+// once it's on screen.
+export const initialSnapshot = local ? build(filesFromBundle(local) ?? local, "snapshot.json", false) : null;
 
-// Counted from the graph rather than read from `meta`, so the header stays
-// honest for a file whose meta is stale, partial or missing altogether.
+// Stand-in so the shell can render (and measure) before any snapshot is loaded.
+export const emptyGraph = { nodes: [], edges: [], meta: {} };
+
+// Counted from the graph rather than read from the manifest, so the header stays
+// honest for a snapshot whose manifest is stale, partial or missing altogether.
 export function describeSnapshot(graph) {
   let components = 0;
   let variables = 0;
@@ -42,7 +47,7 @@ export function describeSnapshot(graph) {
     else if (n.kind === "token" || n.kind === "primitive") variables++;
     else if (n.kind === "textStyle") textStyles++;
   }
-  const generatedAt = Date.parse(graph.meta?.generatedAt ?? "");
+  const generatedAt = Date.parse(graph.meta?.snapshot ?? "");
   return {
     components,
     variables,
@@ -52,86 +57,56 @@ export function describeSnapshot(graph) {
   };
 }
 
-// Strict about the shape the traversal depends on, lenient about anything
-// extra: a snapshot from a newer build may carry fields this viewer predates,
-// and rejecting it for that would be wrong. Errors are written to be read by
-// someone holding the wrong file, not by whoever wrote this code.
-export function parseSnapshot(text, filename) {
-  let data;
-  try {
-    data = JSON.parse(text);
-  } catch (e) {
-    throw new Error(`${filename} isn't valid JSON. ${e.message}`);
-  }
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
-    throw new Error(`${filename} should hold a JSON object with "nodes" and "edges" in it.`);
-  }
-  if (!Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
-    throw new Error(
-      `${filename} needs both a "nodes" list and an "edges" list. If this is a raw Figma capture rather than a built graph, run it through build.mjs first.`,
-    );
-  }
-  if (data.nodes.length === 0) throw new Error(`${filename} has no nodes in it.`);
-
-  const ids = new Set();
-  data.nodes.forEach((n, i) => {
-    if (!n || typeof n.id !== "string" || n.id === "") {
-      throw new Error(`${filename}: node ${i} has no "id".`);
-    }
-    if (ids.has(n.id)) {
-      throw new Error(`${filename}: "${n.id}" appears twice in "nodes".`);
-    }
-    if (!KINDS.includes(n.kind)) {
-      throw new Error(
-        `${filename}: node "${n.id}" has kind "${n.kind}". Expected one of ${KINDS.join(", ")}.`,
-      );
-    }
-    ids.add(n.id);
-  });
-
-  let dangling = 0;
-  const unknownTypes = new Set();
-  data.edges.forEach((e, i) => {
-    if (!e || typeof e.from !== "string" || typeof e.to !== "string") {
-      throw new Error(`${filename}: link ${i} needs both a "from" and a "to".`);
-    }
-    if (typeof e.type !== "string" || e.type === "") {
-      throw new Error(`${filename}: the link from "${e.from}" to "${e.to}" has no "type".`);
-    }
-    if (!ids.has(e.from) || !ids.has(e.to)) dangling++;
-    if (!EDGE_TYPES.includes(e.type)) unknownTypes.add(e.type);
-  });
-
-  // Both of these are survivable, so they inform rather than block: a partial
-  // graph still answers most questions, and refusing to open it helps nobody.
-  const warnings = [];
-  if (dangling) {
-    warnings.push(
-      dangling === 1
-        ? "1 link points at a node that isn't in the file. It won't show up."
-        : `${dangling} links point at a node that isn't in the file. They won't show up.`,
-    );
-  }
-  if (unknownTypes.size) {
-    warnings.push(
-      `Unrecognised link type${unknownTypes.size === 1 ? "" : "s"}: ${[...unknownTypes].join(", ")}. Shown, but not labelled in plain language.`,
-    );
-  }
-
-  return { graph: data, source: filename, isExample: false, warnings };
-}
-
-export function readSnapshotFile(file) {
-  return new Promise((resolve, reject) => {
+const readText = (file) =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`Couldn't read ${file.name}.`));
-    reader.onload = () => {
-      try {
-        resolve(parseSnapshot(String(reader.result), file.name));
-      } catch (e) {
-        reject(e);
-      }
-    };
+    reader.onerror = () => reject(new SnapshotError(`Couldn't read ${file.name}.`));
+    reader.onload = () => resolve(String(reader.result));
     reader.readAsText(file);
   });
+
+const parse = (text, name) => {
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new SnapshotError(`${name} isn't valid JSON. ${e.message}`);
+  }
+};
+
+// A folder pick reports each file's path within the folder, which is what keeps
+// tokens/<collection>.<mode>.json distinct from a stray tokens.json. A plain
+// multi-file pick has no paths, so the file's own name is its key.
+const keyOf = (file) => {
+  const rel = file.webkitRelativePath || file.name;
+  const parts = rel.split("/").filter(Boolean);
+  // Drop the folder the user picked, keep any subfolder below it.
+  return parts.length > 1 ? parts.slice(1).join("/") : parts[0];
+};
+
+// `files` is a FileList or array from an <input type="file">: one bundle, or the
+// files of a snapshot folder.
+export async function readSnapshotFiles(fileList) {
+  const picked = [...fileList].filter((f) => f.name.endsWith(".json"));
+  if (picked.length === 0) {
+    throw new SnapshotError("No .json files in that pick. A snapshot is JSON files.");
+  }
+
+  if (picked.length === 1) {
+    const doc = parse(await readText(picked[0]), picked[0].name);
+    const bundled = filesFromBundle(doc);
+    if (bundled) return build(bundled, picked[0].name, false);
+    throw new SnapshotError(
+      `${picked[0].name} on its own isn't a whole snapshot. Open the .bundle.json, or pick the snapshot folder so every file comes with it.`,
+    );
+  }
+
+  const files = {};
+  for (const file of picked) files[keyOf(file)] = parse(await readText(file), file.name);
+  // A folder that happens to hold one bundle and nothing else still works.
+  const only = Object.values(files);
+  const bundled = only.length === 1 ? filesFromBundle(only[0]) : null;
+  const source = picked[0].webkitRelativePath?.split("/")[0] || `${picked.length} files`;
+  return build(bundled ?? files, source, false);
 }
+
+export { SnapshotError };

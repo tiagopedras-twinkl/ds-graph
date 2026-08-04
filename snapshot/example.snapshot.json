@@ -1,0 +1,945 @@
+{
+  "bundleVersion": "1.0.0",
+  "generator": {
+    "skill": "ds-snapshot",
+    "script": "to-bundle",
+    "bundleVersion": "1.0.0"
+  },
+  "snapshot": {
+    "folder": "example",
+    "schemaVersion": "1.1.0",
+    "exportedAt": "2026-01-01T00:00:00Z",
+    "dependenciesCaptured": true
+  },
+  "files": {
+    "components.json": {
+      "schemaVersion": "1.1.0",
+      "components": [
+        {
+          "id": "actions/button",
+          "name": "Button",
+          "path": [
+            "Actions"
+          ],
+          "kind": "componentSet",
+          "source": "Example Library",
+          "variants": {
+            "size": [
+              "lg",
+              "sm"
+            ],
+            "type": [
+              "primary",
+              "secondary"
+            ]
+          },
+          "variantCombinations": 4,
+          "description": "The one interactive control.",
+          "deprecated": false,
+          "figma": {
+            "nodeId": "1:2",
+            "key": ""
+          }
+        },
+        {
+          "id": "actions/icon-button",
+          "name": "Icon button",
+          "path": [
+            "Actions"
+          ],
+          "kind": "componentSet",
+          "source": "Example Library",
+          "variants": {
+            "size": [
+              "lg",
+              "sm"
+            ]
+          },
+          "variantCombinations": 2,
+          "description": "",
+          "deprecated": false,
+          "figma": {
+            "nodeId": "1:2",
+            "key": ""
+          }
+        },
+        {
+          "id": "banner",
+          "name": "Banner",
+          "path": [],
+          "kind": "componentSet",
+          "source": "Example Library",
+          "variants": {
+            "tone": [
+              "info",
+              "warning"
+            ]
+          },
+          "variantCombinations": 2,
+          "description": "",
+          "deprecated": false,
+          "figma": {
+            "nodeId": "1:2",
+            "key": ""
+          }
+        },
+        {
+          "id": "card",
+          "name": "Card",
+          "path": [],
+          "kind": "componentSet",
+          "source": "Example Library",
+          "variants": {
+            "elevated": [
+              "false",
+              "true"
+            ]
+          },
+          "variantCombinations": 2,
+          "description": "",
+          "deprecated": false,
+          "figma": {
+            "nodeId": "1:2",
+            "key": ""
+          }
+        },
+        {
+          "id": "divider",
+          "name": "Divider",
+          "path": [],
+          "kind": "component",
+          "source": "Example Library",
+          "variants": {},
+          "variantCombinations": 1,
+          "description": "Deprecated — use a Card instead.",
+          "deprecated": true,
+          "figma": {
+            "nodeId": "1:2",
+            "key": ""
+          }
+        }
+      ]
+    },
+    "dependencies.json": {
+      "schemaVersion": "1.1.0",
+      "aliases": [
+        {
+          "from": "background.page",
+          "to": "ink.900",
+          "mode": "dark"
+        },
+        {
+          "from": "background.page",
+          "to": "ink.100",
+          "mode": "light"
+        },
+        {
+          "from": "background.primary",
+          "to": "sky.700",
+          "mode": "dark"
+        },
+        {
+          "from": "background.primary",
+          "to": "sky.500",
+          "mode": "light"
+        },
+        {
+          "from": "text.body",
+          "to": "ink.100",
+          "mode": "dark"
+        },
+        {
+          "from": "text.body",
+          "to": "ink.900",
+          "mode": "light"
+        }
+      ],
+      "components": [
+        {
+          "id": "actions/button",
+          "bindings": [
+            {
+              "token": "background.primary",
+              "properties": [
+                "fills"
+              ]
+            },
+            {
+              "token": "radius.pill",
+              "properties": [
+                "bottomLeftRadius",
+                "topLeftRadius"
+              ]
+            },
+            {
+              "token": "space.gap",
+              "properties": [
+                "itemSpacing"
+              ]
+            },
+            {
+              "token": "space.inset",
+              "properties": [
+                "paddingLeft",
+                "paddingRight"
+              ]
+            },
+            {
+              "token": "text.body",
+              "properties": [
+                "fills"
+              ]
+            }
+          ],
+          "typography": [
+            "body.strong"
+          ],
+          "nests": [
+            {
+              "id": "actions/icon-button",
+              "count": 2
+            }
+          ],
+          "nestsUncaptured": [],
+          "unresolvedBindings": []
+        },
+        {
+          "id": "actions/icon-button",
+          "bindings": [
+            {
+              "token": "background.primary",
+              "properties": [
+                "fills"
+              ]
+            },
+            {
+              "token": "radius.pill",
+              "properties": [
+                "topLeftRadius"
+              ]
+            }
+          ],
+          "typography": [],
+          "nests": [],
+          "nestsUncaptured": [
+            {
+              "name": "ArrowRight",
+              "count": 2
+            }
+          ],
+          "unresolvedBindings": []
+        },
+        {
+          "id": "banner",
+          "bindings": [
+            {
+              "token": "background.page",
+              "properties": [
+                "fills"
+              ]
+            },
+            {
+              "token": "space.inset",
+              "properties": [
+                "paddingBottom",
+                "paddingTop"
+              ]
+            }
+          ],
+          "typography": [
+            "body.base"
+          ],
+          "nests": [
+            {
+              "id": "actions/button",
+              "count": 1
+            }
+          ],
+          "nestsUncaptured": [],
+          "unresolvedBindings": [
+            {
+              "figmaName": "Legacy/banner-tint",
+              "properties": [
+                "fills"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "card",
+          "bindings": [
+            {
+              "token": "background.page",
+              "properties": [
+                "fills"
+              ]
+            },
+            {
+              "token": "space.inset",
+              "properties": [
+                "paddingLeft",
+                "paddingRight"
+              ]
+            },
+            {
+              "token": "text.body",
+              "properties": [
+                "fills"
+              ]
+            }
+          ],
+          "typography": [
+            "body.base",
+            "heading.level-1"
+          ],
+          "nests": [
+            {
+              "id": "actions/button",
+              "count": 1
+            },
+            {
+              "id": "divider",
+              "count": 1
+            }
+          ],
+          "nestsUncaptured": [],
+          "unresolvedBindings": []
+        },
+        {
+          "id": "divider",
+          "bindings": [
+            {
+              "token": "background.primary",
+              "properties": [
+                "strokes"
+              ]
+            }
+          ],
+          "typography": [],
+          "nests": [],
+          "nestsUncaptured": [],
+          "unresolvedBindings": []
+        }
+      ]
+    },
+    "manifest.json": {
+      "schemaVersion": "1.1.0",
+      "generator": {
+        "skill": "ds-snapshot",
+        "skillVersion": "1.1.0"
+      },
+      "exportedAt": "2026-01-01T00:00:00Z",
+      "spec": {
+        "designTokens": "2025.10"
+      },
+      "source": {
+        "figmaFileName": "Example Library",
+        "figmaFileKey": "",
+        "figmaLastModified": "",
+        "transport": "desktop-bridge"
+      },
+      "collections": [
+        {
+          "id": "primitives",
+          "name": "Primitives",
+          "defaultMode": "Value",
+          "modes": [
+            "Value"
+          ],
+          "variableCount": 4
+        },
+        {
+          "id": "shape",
+          "name": "Shape",
+          "defaultMode": "Value",
+          "modes": [
+            "Value"
+          ],
+          "variableCount": 1
+        },
+        {
+          "id": "tokens",
+          "name": "Tokens",
+          "defaultMode": "light",
+          "modes": [
+            "dark",
+            "light"
+          ],
+          "variableCount": 5
+        }
+      ],
+      "files": [
+        {
+          "path": "components.json",
+          "kind": "components"
+        },
+        {
+          "path": "dependencies.json",
+          "kind": "dependencies"
+        },
+        {
+          "path": "tokens.json",
+          "kind": "tokens-default"
+        },
+        {
+          "path": "tokens/primitives.value.json",
+          "kind": "tokens-mode",
+          "collection": "Primitives",
+          "mode": "Value"
+        },
+        {
+          "path": "tokens/shape.value.json",
+          "kind": "tokens-mode",
+          "collection": "Shape",
+          "mode": "Value"
+        },
+        {
+          "path": "tokens/tokens.dark.json",
+          "kind": "tokens-mode",
+          "collection": "Tokens",
+          "mode": "dark"
+        },
+        {
+          "path": "tokens/tokens.light.json",
+          "kind": "tokens-mode",
+          "collection": "Tokens",
+          "mode": "light"
+        },
+        {
+          "path": "typography.json",
+          "kind": "typography"
+        }
+      ],
+      "counts": {
+        "variables": 10,
+        "typographyStyles": 3,
+        "components": 1,
+        "componentSets": 4
+      },
+      "dependencies": {
+        "captured": true,
+        "sources": [
+          {
+            "figmaFileName": "Example Library",
+            "figmaFileKey": "",
+            "componentsWalked": 5
+          }
+        ],
+        "counts": {
+          "bindings": 13,
+          "aliases": 6,
+          "nests": 4,
+          "nestsUncaptured": 1,
+          "typographyLinks": 4,
+          "unresolvedBindings": 1
+        }
+      },
+      "notes": {
+        "nonStandardTypes": [],
+        "unmapped": [
+          {
+            "kind": "alias",
+            "name": "tokens/tokens.dark.json (3 references)",
+            "reason": "cross-collection alias unresolvable in mode file"
+          },
+          {
+            "kind": "alias",
+            "name": "tokens/tokens.light.json (3 references)",
+            "reason": "cross-collection alias unresolvable in mode file"
+          }
+        ]
+      }
+    },
+    "tokens.json": {
+      "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+      "background": {
+        "page": {
+          "$type": "color",
+          "$value": "{ink.100}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "background/page",
+              "figmaType": "COLOR"
+            }
+          }
+        },
+        "primary": {
+          "$type": "color",
+          "$value": "{sky.500}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "background/primary",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      },
+      "ink": {
+        "100": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.9294,
+              0.9451,
+              0.9608
+            ],
+            "alpha": 1,
+            "hex": "#edf1f5"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "ink/100",
+              "figmaType": "COLOR"
+            }
+          }
+        },
+        "900": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.0784,
+              0.1059,
+              0.1451
+            ],
+            "alpha": 1,
+            "hex": "#141b25"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "ink/900",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      },
+      "radius": {
+        "pill": {
+          "$type": "dimension",
+          "$value": {
+            "value": 999,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "radius/pill",
+              "figmaType": "FLOAT"
+            }
+          }
+        }
+      },
+      "sky": {
+        "500": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.1451,
+              0.3882,
+              0.9216
+            ],
+            "alpha": 1,
+            "hex": "#2563eb"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "sky/500",
+              "figmaType": "COLOR"
+            }
+          }
+        },
+        "700": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.1137,
+              0.3059,
+              0.7255
+            ],
+            "alpha": 1,
+            "hex": "#1d4eb9"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "sky/700",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      },
+      "space": {
+        "gap": {
+          "$type": "dimension",
+          "$value": {
+            "value": 8,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "space/gap",
+              "figmaType": "FLOAT"
+            }
+          }
+        },
+        "inset": {
+          "$type": "dimension",
+          "$value": {
+            "value": 16,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "space/inset",
+              "figmaType": "FLOAT"
+            }
+          }
+        }
+      },
+      "text": {
+        "body": {
+          "$type": "color",
+          "$value": "{ink.900}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "text/body",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      }
+    },
+    "tokens/primitives.value.json": {
+      "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+      "ink": {
+        "100": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.9294,
+              0.9451,
+              0.9608
+            ],
+            "alpha": 1,
+            "hex": "#edf1f5"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "ink/100",
+              "figmaType": "COLOR"
+            }
+          }
+        },
+        "900": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.0784,
+              0.1059,
+              0.1451
+            ],
+            "alpha": 1,
+            "hex": "#141b25"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "ink/900",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      },
+      "sky": {
+        "500": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.1451,
+              0.3882,
+              0.9216
+            ],
+            "alpha": 1,
+            "hex": "#2563eb"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "sky/500",
+              "figmaType": "COLOR"
+            }
+          }
+        },
+        "700": {
+          "$type": "color",
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [
+              0.1137,
+              0.3059,
+              0.7255
+            ],
+            "alpha": 1,
+            "hex": "#1d4eb9"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "sky/700",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      }
+    },
+    "tokens/shape.value.json": {
+      "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+      "radius": {
+        "pill": {
+          "$type": "dimension",
+          "$value": {
+            "value": 999,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "radius/pill",
+              "figmaType": "FLOAT"
+            }
+          }
+        }
+      }
+    },
+    "tokens/tokens.dark.json": {
+      "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+      "background": {
+        "page": {
+          "$type": "color",
+          "$value": "{ink.900}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "background/page",
+              "figmaType": "COLOR"
+            }
+          }
+        },
+        "primary": {
+          "$type": "color",
+          "$value": "{sky.700}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "background/primary",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      },
+      "space": {
+        "gap": {
+          "$type": "dimension",
+          "$value": {
+            "value": 8,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "space/gap",
+              "figmaType": "FLOAT"
+            }
+          }
+        },
+        "inset": {
+          "$type": "dimension",
+          "$value": {
+            "value": 16,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "space/inset",
+              "figmaType": "FLOAT"
+            }
+          }
+        }
+      },
+      "text": {
+        "body": {
+          "$type": "color",
+          "$value": "{ink.100}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "text/body",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      }
+    },
+    "tokens/tokens.light.json": {
+      "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+      "background": {
+        "page": {
+          "$type": "color",
+          "$value": "{ink.100}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "background/page",
+              "figmaType": "COLOR"
+            }
+          }
+        },
+        "primary": {
+          "$type": "color",
+          "$value": "{sky.500}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "background/primary",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      },
+      "space": {
+        "gap": {
+          "$type": "dimension",
+          "$value": {
+            "value": 8,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "space/gap",
+              "figmaType": "FLOAT"
+            }
+          }
+        },
+        "inset": {
+          "$type": "dimension",
+          "$value": {
+            "value": 16,
+            "unit": "px"
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "space/inset",
+              "figmaType": "FLOAT"
+            }
+          }
+        }
+      },
+      "text": {
+        "body": {
+          "$type": "color",
+          "$value": "{ink.900}",
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "text/body",
+              "figmaType": "COLOR"
+            }
+          }
+        }
+      }
+    },
+    "typography.json": {
+      "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+      "body": {
+        "base": {
+          "$type": "typography",
+          "$value": {
+            "fontFamily": "Example Sans",
+            "fontSize": {
+              "value": 16,
+              "unit": "px"
+            },
+            "fontWeight": 400,
+            "letterSpacing": {
+              "value": 0,
+              "unit": "px"
+            },
+            "lineHeight": 1.5
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "body/base",
+              "figmaStyleId": "S:example0001",
+              "figmaFontStyle": "Regular",
+              "figmaLineHeight": {
+                "unit": "PERCENT",
+                "value": 150
+              },
+              "figmaLetterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+              }
+            }
+          }
+        },
+        "strong": {
+          "$type": "typography",
+          "$value": {
+            "fontFamily": "Example Sans",
+            "fontSize": {
+              "value": 16,
+              "unit": "px"
+            },
+            "fontWeight": 700,
+            "letterSpacing": {
+              "value": 0,
+              "unit": "px"
+            },
+            "lineHeight": 1.5
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "body/strong",
+              "figmaStyleId": "S:example0002",
+              "figmaFontStyle": "Bold",
+              "figmaLineHeight": {
+                "unit": "PERCENT",
+                "value": 150
+              },
+              "figmaLetterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+              }
+            }
+          }
+        }
+      },
+      "heading": {
+        "level-1": {
+          "$type": "typography",
+          "$value": {
+            "fontFamily": "Example Sans",
+            "fontSize": {
+              "value": 32,
+              "unit": "px"
+            },
+            "fontWeight": 700,
+            "letterSpacing": {
+              "value": 0,
+              "unit": "px"
+            },
+            "lineHeight": 1.5
+          },
+          "$extensions": {
+            "io.github.tiagopedras-twinkl.ds-snapshot": {
+              "figmaName": "heading/level 1",
+              "figmaStyleId": "S:example0003",
+              "figmaFontStyle": "Bold",
+              "figmaLineHeight": {
+                "unit": "PERCENT",
+                "value": 150
+              },
+              "figmaLetterSpacing": {
+                "unit": "PERCENT",
+                "value": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

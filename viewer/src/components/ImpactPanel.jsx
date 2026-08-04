@@ -101,7 +101,9 @@ export default function ImpactPanel({ graph, focusedId, previewId, onFocus }) {
 
       {node.variants && Object.keys(node.variants).length > 0 && <VariantExplorer node={node} />}
 
-      {node.modes && (
+      {/* One row per theme. A single-mode collection shows one row; the token
+          collection has five, and the value often differs in each. */}
+      {node.modes && Object.keys(node.modes).length > 0 && (
         <div className="impact-modes">
           {Object.entries(node.modes).map(([mode, value]) => (
             <div className="impact-mode-row" key={mode}>
