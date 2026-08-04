@@ -43,10 +43,8 @@ on it.
 **Load snapshot…** in the top right opens a snapshot from your machine and swaps
 the whole map over to it — nothing to build, nothing uploaded anywhere, and it
 works in the single-file build too. That's the way to audit a library without
-committing its data. Either form works:
-
-- the single `.bundle.json` a snapshot packs into — one file, easiest to hand around
-- the snapshot folder itself — pick the folder, and its `tokens/` files come with it
+committing its data. What it takes is the single `.bundle.json` a snapshot packs
+into.
 
 If what you open isn't a whole snapshot, the viewer says what's missing and keeps
 whatever was already on screen.

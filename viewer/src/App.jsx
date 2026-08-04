@@ -16,7 +16,6 @@ function App() {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [loadError, setLoadError] = useState(null);
   const fileInput = useRef(null);
-  const folderInput = useRef(null);
   const graph = useMemo(() => loadGraph(snapshot?.graph ?? emptyGraph), [snapshot]);
   const summary = useMemo(() => describeSnapshot(snapshot?.graph ?? emptyGraph), [snapshot]);
   // `nav` is the back/forward history of focused (map-centred) nodes.
@@ -100,8 +99,8 @@ function App() {
           <button className="snapshot-button" onClick={() => fileInput.current?.click()}>
             Load snapshot…
           </button>
-          {/* Two inputs because a browser file picker either takes files or a
-              folder, never both. A snapshot can be handed over either way. */}
+          {/* `multiple` so an unpacked snapshot still loads if its files are
+              picked together, even though the bundle is the way in. */}
           <input
             ref={fileInput}
             type="file"
@@ -110,7 +109,6 @@ function App() {
             onChange={onPick}
             hidden
           />
-          <input ref={folderInput} type="file" webkitdirectory="" directory="" onChange={onPick} hidden />
         </div>
       </header>
       {snapshot && loadError && (
@@ -148,9 +146,8 @@ function App() {
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="start-modal-title">
             <h2 id="start-modal-title">Open a snapshot</h2>
             <p className="modal-body">
-              A snapshot is a dated capture of your Figma library. Open the single{" "}
-              <code>.bundle.json</code>, or the snapshot folder itself. Nothing is uploaded — it's
-              read here in the browser.
+              A snapshot is a dated capture of your Figma library — one{" "}
+              <code>.bundle.json</code> file. Nothing is uploaded; it's read here in the browser.
             </p>
             {loadError && (
               <p className="modal-error" role="alert">
@@ -158,13 +155,10 @@ function App() {
               </p>
             )}
             <button className="modal-primary" autoFocus onClick={() => fileInput.current?.click()}>
-              Open snapshot file…
+              Open snapshot…
             </button>
             <p className="modal-alt">
-              <button className="modal-link" onClick={() => folderInput.current?.click()}>
-                Open a snapshot folder
-              </button>{" "}
-              instead, or{" "}
+              Or{" "}
               <button className="modal-link" onClick={() => applySnapshot(exampleSnapshot)}>
                 explore example data
               </button>{" "}

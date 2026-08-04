@@ -3,11 +3,10 @@
 // no intermediate file to go stale, and the format is exactly what the ds-snapshot
 // skill writes (see ../../../SCHEMA.md).
 //
-// A snapshot reaches the browser two ways, and both end up as the same map of
-// contract path -> parsed JSON that lib/snapshot-graph.mjs takes:
-//
-//   - one .bundle.json         the whole snapshot in a single file
-//   - a folder, or its files   manifest.json, tokens.json, tokens/<x>.json, …
+// The way in is the single .bundle.json, which holds the whole snapshot. A set of
+// loose snapshot files picked together assembles too, since it is the same map of
+// contract path -> parsed JSON that lib/snapshot-graph.mjs takes — but a file
+// picker cannot reach into tokens/, so the bundle is what the viewer asks for.
 //
 // The example is imported rather than fetched on demand because the production
 // build is a single HTML file meant to open from file://, where fetch() of a
@@ -73,18 +72,18 @@ const parse = (text, name) => {
   }
 };
 
-// A folder pick reports each file's path within the folder, which is what keeps
-// tokens/<collection>.<mode>.json distinct from a stray tokens.json. A plain
-// multi-file pick has no paths, so the file's own name is its key.
+// A pick that carries a path within a folder keeps tokens/<collection>.<mode>.json
+// distinct from a stray tokens.json. A plain multi-file pick has no paths, so the
+// file's own name is its key.
 const keyOf = (file) => {
   const rel = file.webkitRelativePath || file.name;
   const parts = rel.split("/").filter(Boolean);
-  // Drop the folder the user picked, keep any subfolder below it.
+  // Drop the enclosing folder, keep any subfolder below it.
   return parts.length > 1 ? parts.slice(1).join("/") : parts[0];
 };
 
 // `files` is a FileList or array from an <input type="file">: one bundle, or the
-// files of a snapshot folder.
+// loose files of a snapshot.
 export async function readSnapshotFiles(fileList) {
   const picked = [...fileList].filter((f) => f.name.endsWith(".json"));
   if (picked.length === 0) {
@@ -96,7 +95,7 @@ export async function readSnapshotFiles(fileList) {
     const bundled = filesFromBundle(doc);
     if (bundled) return build(bundled, picked[0].name, false);
     throw new SnapshotError(
-      `${picked[0].name} on its own isn't a whole snapshot. Open the .bundle.json, or pick the snapshot folder so every file comes with it.`,
+      `${picked[0].name} on its own isn't a whole snapshot. Open the .bundle.json — one file with everything in it.`,
     );
   }
 

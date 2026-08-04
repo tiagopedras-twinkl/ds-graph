@@ -242,9 +242,10 @@ warning, because drawing it would invent a node.
 
 ## What the viewer checks
 
-**Load snapshot…** takes either the single `.bundle.json` or a snapshot folder. A
-browser file picker handles one or the other, never both, so the modal offers each
-separately — the button in the header opens the file picker.
+**Load snapshot…** takes the single `.bundle.json`. An unpacked snapshot still
+loads if its files are picked together, but a browser file picker cannot reach into
+the `tokens/` subfolder that way, so those tokens lose their per-theme values —
+the bundle is the way in.
 
 These are refused, with a message naming what's wrong:
 
