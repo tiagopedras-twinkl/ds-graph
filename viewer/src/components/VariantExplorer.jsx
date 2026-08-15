@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 // Lets a designer construct one specific variant (e.g. Size=Large,
 // State=Hover) and see its full combination. Bindings aren't captured per
 // variant in the snapshot — the axes are recorded but BINDS links attach
-// edges to the whole component (see HANDOFF.md's "deliberately deferred"
+// edges to the whole component (see README.md's "bindings per variant"
 // note) — so picking a combination here doesn't affect what the map shows.
 export default function VariantExplorer({ node }) {
   const dims = useMemo(() => Object.entries(node.variants), [node]);

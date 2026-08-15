@@ -3,7 +3,14 @@
 // Edge direction convention: `from` depends on / uses `to`. So walking
 // outgoing edges from a node gives its dependencies (what it relies on);
 // walking incoming edges gives its dependents (what relies on it).
-export const KINDS = ["primitive", "token", "textStyle", "component"];
+//
+// "subcomponent" isn't a real snapshot kind — it's a sidebar-only split of
+// "component" for names starting with ".", the Figma convention for a
+// component meant to be nested inside others rather than used on its own
+// (which is also why Figma itself hides them from the Assets panel).
+export const KINDS = ["primitive", "token", "textStyle", "component", "subcomponent"];
+
+export const isSubcomponent = (n) => n.kind === "component" && n.name?.startsWith(".");
 
 // `graphData` is the map read out of a snapshot — either the one bundled
 // at build time or one the user loaded at runtime. See lib/snapshot.js.
@@ -106,7 +113,13 @@ export function searchNodes(graph, query, kindFilter) {
   const q = query.trim().toLowerCase();
   return graph.nodes
     .filter((n) => {
-      if (kindFilter && n.kind !== kindFilter) return false;
+      if (kindFilter === "subcomponent") {
+        if (!isSubcomponent(n)) return false;
+      } else if (kindFilter === "component") {
+        if (n.kind !== "component" || isSubcomponent(n)) return false;
+      } else if (kindFilter && n.kind !== kindFilter) {
+        return false;
+      }
       if (!q) return true;
       return n.id.toLowerCase().includes(q) || n.name?.toLowerCase().includes(q);
     })
