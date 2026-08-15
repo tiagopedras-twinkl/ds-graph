@@ -6,16 +6,13 @@ dist/
 # Machine-specific Claude Code permissions
 .claude/settings.local.json
 
-# Snapshots are private design system data — see SCHEMA.md for the format.
-# example.snapshot.json is the committed exception: synthetic, invented names.
+# Snapshots are private design system data. They live outside this repo now
+# (../ds-snapshots), so there is nothing here to ignore. These two lines stay as
+# a guard against a stray copy being committed by someone following older
+# instructions.
 #
-# ds-snapshots/ holds the dated captures. viewer/src/snapshot.json is a copy of
-# one, which the viewer opens with at startup so local dev needs no picking.
-# Both name a specific private library, so neither is committed.
-ds-snapshots/
+# example.snapshot.json is the committed exception: synthetic, invented names.
 snapshot/*
 !snapshot/example.snapshot.json
+ds-snapshots/
 viewer/src/snapshot.json
-
-# Internal handoff notes — names a specific private library and its roadmap.
-HANDOFF.md

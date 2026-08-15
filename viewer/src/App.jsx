@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import GraphView from "./components/GraphView";
 import ImpactPanel from "./components/ImpactPanel";
@@ -9,12 +9,34 @@ import {
   exampleSnapshot,
   initialSnapshot,
   readSnapshotFiles,
+  restoreSnapshot,
 } from "./lib/snapshot";
+import {
+  forgetSnapshot,
+  permissionFor,
+  pickFiles,
+  recallSnapshot,
+  rememberSnapshot,
+} from "./lib/session";
 import "./App.css";
+
+// How long ago a cached copy was taken, in words, so nobody mistakes it for a
+// fresh read of the file on disk.
+function ago(iso) {
+  const then = Date.parse(iso ?? "");
+  if (Number.isNaN(then)) return null;
+  const days = Math.floor((Date.now() - then) / 86400000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
+}
 
 function App() {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [loadError, setLoadError] = useState(null);
+  // A snapshot the last session opened that this one cannot read without the
+  // user confirming. Null once it is either reopened or dismissed.
+  const [pending, setPending] = useState(null);
   const fileInput = useRef(null);
   const graph = useMemo(() => loadGraph(snapshot?.graph ?? emptyGraph), [snapshot]);
   const summary = useMemo(() => describeSnapshot(snapshot?.graph ?? emptyGraph), [snapshot]);
@@ -52,6 +74,100 @@ function App() {
     setNav({ history: [], index: -1 });
     setPreviewId(null);
     setLoadError(null);
+    setPending(null);
+  };
+
+  // Reopen whatever the last session had, once, on load.
+  //
+  // A remembered handle is read again off disk, so a recapture at the same path
+  // is picked up. Browsers drop read permission between sessions though, and
+  // asking for it back needs a click — so when the answer is "prompt" the viewer
+  // offers a button instead of restoring silently. The cached copy is the
+  // fallback, and it is labelled as a copy because it cannot see a newer file.
+  useEffect(() => {
+    if (initialSnapshot) return undefined;
+    let cancelled = false;
+
+    (async () => {
+      const last = await recallSnapshot();
+      if (cancelled || !last) return;
+
+      if (last.handle && (await permissionFor(last.handle)) === "granted") {
+        try {
+          const file = await last.handle.getFile();
+          const next = await readSnapshotFiles([file]);
+          if (!cancelled) applySnapshot(next);
+          return;
+        } catch {
+          // Moved, renamed or deleted since. Fall through to the cached copy.
+        }
+      }
+      if (cancelled) return;
+
+      if (last.handle) {
+        setPending(last);
+        return;
+      }
+      if (last.files) {
+        try {
+          const when = ago(last.savedAt);
+          applySnapshot(
+            restoreSnapshot(last.files, `${last.source} · copy saved ${when ?? "earlier"}`),
+          );
+        } catch {
+          await forgetSnapshot();
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Everything that lands a snapshot on screen goes through here, so the session
+  // records exactly what the viewer is showing and nothing else.
+  const acceptSnapshot = (next, handle) => {
+    applySnapshot(next);
+    rememberSnapshot({ handle, files: next.files, source: next.source });
+  };
+
+  const reopenPending = async () => {
+    if (!pending?.handle) return;
+    if ((await permissionFor(pending.handle, { request: true })) !== "granted") {
+      setLoadError("Permission to read that file was refused. Open it again to continue.");
+      return;
+    }
+    try {
+      const file = await pending.handle.getFile();
+      acceptSnapshot(await readSnapshotFiles([file]), pending.handle);
+    } catch (e) {
+      setLoadError(e.message);
+      await forgetSnapshot();
+      setPending(null);
+    }
+  };
+
+  const dismissPending = async () => {
+    await forgetSnapshot();
+    setPending(null);
+  };
+
+  // The handle picker is the way in where it exists, because only a handle can be
+  // reopened next session. The hidden input stays for every other browser, and
+  // for picking the loose files of an unpacked snapshot.
+  const openSnapshot = async () => {
+    const picked = await pickFiles();
+    if (!picked) {
+      if (!("showOpenFilePicker" in window)) fileInput.current?.click();
+      return;
+    }
+    try {
+      const next = await readSnapshotFiles(picked.files);
+      acceptSnapshot(next, picked.handles.length === 1 ? picked.handles[0] : undefined);
+    } catch (e) {
+      setLoadError(e.message);
+    }
   };
 
   const onPick = async (event) => {
@@ -60,7 +176,7 @@ function App() {
     event.target.value = "";
     if (picked.length === 0) return;
     try {
-      applySnapshot(await readSnapshotFiles(picked));
+      acceptSnapshot(await readSnapshotFiles(picked));
     } catch (e) {
       setLoadError(e.message);
     }
@@ -96,7 +212,7 @@ function App() {
               )}
             </>
           )}
-          <button className="snapshot-button" onClick={() => fileInput.current?.click()}>
+          <button className="snapshot-button" onClick={openSnapshot}>
             Load snapshot…
           </button>
           {/* `multiple` so an unpacked snapshot still loads if its files are
@@ -154,9 +270,32 @@ function App() {
                 {loadError}
               </p>
             )}
-            <button className="modal-primary" autoFocus onClick={() => fileInput.current?.click()}>
-              Open snapshot…
-            </button>
+            {pending ? (
+              <>
+                <button className="modal-primary" autoFocus onClick={reopenPending}>
+                  Reopen {pending.source}
+                </button>
+                <p className="modal-alt">
+                  Last opened {ago(pending.savedAt) ?? "earlier"}. Your browser asks again each
+                  session before a page may read a file.{" "}
+                  <button className="modal-link" onClick={dismissPending}>
+                    Forget it
+                  </button>
+                  .
+                </p>
+                <p className="modal-alt">
+                  Or{" "}
+                  <button className="modal-link" onClick={openSnapshot}>
+                    open a different snapshot
+                  </button>
+                  .
+                </p>
+              </>
+            ) : (
+              <button className="modal-primary" autoFocus onClick={openSnapshot}>
+                Open snapshot…
+              </button>
+            )}
             <p className="modal-alt">
               Or{" "}
               <button className="modal-link" onClick={() => applySnapshot(exampleSnapshot)}>

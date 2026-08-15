@@ -1,7 +1,7 @@
 // Where the graph on screen comes from: a ds-snapshot the user opens, or a
 // built-in one at startup. The viewer reads snapshots and nothing else — there is
 // no intermediate file to go stale, and the format is exactly what the ds-snapshot
-// skill writes (see ../../../SCHEMA.md).
+// skill writes and validates (see its references/output-contract.md).
 //
 // The way in is the single .bundle.json, which holds the whole snapshot. A set of
 // loose snapshot files picked together assembles too, since it is the same map of
@@ -14,15 +14,22 @@
 import example from "../../../snapshot/example.snapshot.json";
 import { SnapshotError, filesFromBundle, snapshotGraph } from "../../../lib/snapshot-graph.mjs";
 
-// ../snapshot.json is a private snapshot bundle, not committed (see SCHEMA.md),
-// so it may legitimately be absent. `import.meta.glob` resolves to an empty
-// object in that case instead of failing the build, which a static import cannot.
-const localModules = import.meta.glob("../snapshot.json", { eager: true, import: "default" });
-const local = Object.values(localModules)[0];
+// The snapshot to open with, read from outside this repo at build time — see
+// vite.config.js for where it looks. Null when there is none, which is normal:
+// this repo is the tool and holds no library data of its own.
+import local from "virtual:local-snapshot";
 
+// `files` rides along on the result so the session can cache exactly what was
+// read, without the caller having to keep a second copy of it.
 function build(files, source, isExample) {
   const { graph, warnings } = snapshotGraph(files);
-  return { graph, source, isExample, warnings };
+  return { graph, source, isExample, warnings, files };
+}
+
+// Rebuild from a files map the session cached earlier. Same path as a fresh read,
+// so a snapshot that has since become unreadable fails here rather than on screen.
+export function restoreSnapshot(files, source) {
+  return build(files, source, false);
 }
 
 export const exampleSnapshot = build(filesFromBundle(example), "built-in example", true);
@@ -30,7 +37,19 @@ export const exampleSnapshot = build(filesFromBundle(example), "built-in example
 // Null means "nothing loaded yet" — the viewer opens on a prompt to pick a
 // snapshot rather than silently showing the example, which reads as real data
 // once it's on screen.
-export const initialSnapshot = local ? build(filesFromBundle(local) ?? local, "snapshot.json", false) : null;
+//
+// __SNAPSHOT_PATH__ is the file's absolute location on the machine that built
+// the app, injected by vite.config.js — real and known because build time has
+// filesystem access. Not the same guarantee applies once a snapshot is opened
+// through the file picker below: browsers deliberately hide a picked file's
+// folder from the page, so `source` there can only ever be a name.
+export const initialSnapshot = local
+  ? build(
+      filesFromBundle(local) ?? local,
+      (typeof __SNAPSHOT_PATH__ !== "undefined" && __SNAPSHOT_PATH__) || "snapshot.json",
+      false,
+    )
+  : null;
 
 // Stand-in so the shell can render (and measure) before any snapshot is loaded.
 export const emptyGraph = { nodes: [], edges: [], meta: {} };

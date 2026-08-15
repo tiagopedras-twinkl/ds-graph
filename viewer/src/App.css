@@ -212,6 +212,9 @@
   flex-shrink: 0;
 }
 .dot-component { background: var(--component-color); }
+/* Same colour as a component, dimmed — a subcomponent isn't a different kind
+   of thing, just a name Figma hides from its own Assets panel. */
+.dot-subcomponent { background: var(--component-color); opacity: 0.5; }
 .dot-token { background: var(--token-color); }
 .dot-primitive { background: var(--primitive-color); }
 .dot-textStyle { background: var(--textstyle-color); }

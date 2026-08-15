@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { KINDS, searchNodes } from "../lib/graph";
+import { KINDS, isSubcomponent, searchNodes } from "../lib/graph";
 
 const KIND_LABEL = {
   component: "Components",
+  subcomponent: "Subcomponents",
   token: "Tokens",
   primitive: "Primitives",
   textStyle: "Typography Styles",
@@ -19,7 +20,10 @@ export default function Sidebar({ graph, focusedId, previewId, onFocus }) {
 
   const counts = useMemo(() => {
     const c = {};
-    for (const n of graph.nodes) c[n.kind] = (c[n.kind] || 0) + 1;
+    for (const n of graph.nodes) {
+      const key = isSubcomponent(n) ? "subcomponent" : n.kind;
+      c[key] = (c[key] || 0) + 1;
+    }
     return c;
   }, [graph]);
 

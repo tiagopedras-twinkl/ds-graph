@@ -6,10 +6,11 @@
 //   node query.mjs --strays            components reaching past tokens to raw values
 //   node query.mjs --dupes             same name living in two collections
 //
-// Reads a ds-snapshot directly — the newest in ds-snapshots/ unless one is named
-// with --snapshot <path>. Same snapshot the viewer opens, same interpretation of
-// it (lib/snapshot-graph.mjs), so the two can never disagree.
-import { resolveSnapshot, SnapshotError } from "./lib/read-snapshot.mjs";
+// Reads a ds-snapshot directly — the newest in the snapshots folder beside this
+// repo (../ds-snapshots, or DS_SNAPSHOTS_DIR) unless one is named with
+// --snapshot <path>. Same snapshot the viewer opens, same interpretation of it
+// (lib/snapshot-graph.mjs), so the two can never disagree.
+import { resolveSnapshot, SNAPSHOTS_DIR, SnapshotError } from "./lib/read-snapshot.mjs";
 import { snapshotGraph } from "./lib/snapshot-graph.mjs";
 
 const args = process.argv.slice(2);
@@ -22,7 +23,11 @@ try {
   source = resolveSnapshot(target);
   const built = snapshotGraph(source.files);
   graph = built.graph;
-  if (source.isExample) console.log(`no snapshot in ds-snapshots/ — using ${source.target}\n`);
+  // Loud, because the example is synthetic: an answer from it looks exactly like
+  // an answer from the real library.
+  if (source.isExample) {
+    console.log(`no snapshot in ${SNAPSHOTS_DIR}/ — answering from ${source.target}, which is invented data\n`);
+  }
   for (const w of built.warnings) console.log(`note: ${w}\n`);
 } catch (e) {
   console.error(e instanceof SnapshotError ? e.message : e);
