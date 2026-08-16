@@ -31,10 +31,13 @@ same way, through [`lib/snapshot-graph.mjs`](lib/snapshot-graph.mjs). A snapshot
 is either a folder or the single `.bundle.json` it packs into; both hold the same
 files under the same names, so nothing calling in has to care which.
 
-The one exception is [`snapshot/example.snapshot.json`](snapshot/example.snapshot.json),
-committed on purpose: it is synthetic, with invented names, and it is what makes
-a fresh clone do something. Real snapshot data is private — never commit or
-publish one.
+The one exception is [`example.snapshot.json`](example.snapshot.json), committed
+on purpose: it is synthetic, with invented names, and it is what makes a fresh
+clone do something. It sits at the root rather than in a folder of its own,
+because a folder named `snapshot/` in here reads as the place snapshots go, and
+they go outside this repo. Regenerate it with
+[`tools/make-example-snapshot.mjs`](tools/make-example-snapshot.mjs) rather than
+editing it by hand. Real snapshot data is private — never commit or publish one.
 
 ## Running it
 
