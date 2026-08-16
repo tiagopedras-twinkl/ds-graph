@@ -6,13 +6,15 @@ dist/
 # Machine-specific Claude Code permissions
 .claude/settings.local.json
 
-# Snapshots are private design system data. They live outside this repo now
-# (../ds-snapshots), so there is nothing here to ignore. These two lines stay as
-# a guard against a stray copy being committed by someone following older
-# instructions.
+# Snapshots are private design system data and live outside this repo, in
+# ../ds-snapshots. Nothing in here should ever hold one, so these lines are a
+# guard against a stray copy rather than a rule about where captures go.
 #
-# example.snapshot.json is the committed exception: synthetic, invented names.
-snapshot/*
-!snapshot/example.snapshot.json
+# The committed exception is example.snapshot.json at the root: synthetic, with
+# invented names. It carries no `.bundle.json` suffix, so the pattern below does
+# not catch it.
+*.bundle.json
+snapshot/
+snapshots/
 ds-snapshots/
 viewer/src/snapshot.json

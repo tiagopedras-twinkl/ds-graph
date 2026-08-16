@@ -31,10 +31,13 @@ same way, through [`lib/snapshot-graph.mjs`](lib/snapshot-graph.mjs). A snapshot
 is either a folder or the single `.bundle.json` it packs into; both hold the same
 files under the same names, so nothing calling in has to care which.
 
-The one exception is [`snapshot/example.snapshot.json`](snapshot/example.snapshot.json),
-committed on purpose: it is synthetic, with invented names, and it is what makes
-a fresh clone do something. Real snapshot data is private — never commit or
-publish one.
+The one exception is [`example.snapshot.json`](example.snapshot.json), committed
+on purpose: it is synthetic, with invented names, and it is what makes a fresh
+clone do something. It sits at the root rather than in a folder of its own,
+because a folder named `snapshot/` in here reads as the place snapshots go, and
+they go outside this repo. Regenerate it with
+[`tools/make-example-snapshot.mjs`](tools/make-example-snapshot.mjs) rather than
+editing it by hand. Real snapshot data is private — never commit or publish one.
 
 ## Running it
 
@@ -116,9 +119,11 @@ first**, and only then for `.components` (colour) or `.value` (size):
 
 The map is built in memory and never written to disk, so there is no second file
 to rebuild or hand around, and no way for the viewer and the CLI to disagree.
-`tokens.json` becomes token and primitive nodes, the per-theme token files become
-each node's `modes`, `typography.json` and `components.json` become the other two
-node kinds, and the four lists in `dependencies.json` become the four link types.
+`tokens.json` becomes token and primitive nodes and each node's `modes`,
+`typography.json` and `components.json` become the other two node kinds, and the
+four lists in `dependencies.json` become the four link types. In a snapshot older
+than contract 2.1.0 the themes are only in the per-theme token files, so those are
+read instead when a token does not carry its own.
 
 Two of the snapshot's lists are gaps recorded on purpose, and they survive into
 the map rather than being dropped, because each is a finding: `unresolvedBindings`
@@ -131,10 +136,12 @@ becomes primitive nodes rather than token nodes, and `../ds-snapshots` is where
 snapshots sit when nothing says otherwise. Everything else is derived from the
 data.
 
-**Load snapshot…** takes the single `.bundle.json`. An unpacked snapshot loads if
-its files are picked together, but a browser file picker cannot reach into the
-`tokens/` subfolder, so those tokens lose their per-theme values — the bundle is
-the way in. The viewer refuses anything that isn't valid JSON, isn't a whole
+**Load snapshot…** takes the single `.bundle.json`, or the files of an unpacked
+snapshot picked together. From contract 2.1.0 each token carries its own themes, so
+the four files at the top of a snapshot are a complete map and a browser file picker
+never has to reach into the `tokens/` subfolder — which it cannot do. Below 2.1.0 it
+still cannot, and those tokens lose their per-theme values, so for an older snapshot
+the bundle remains the way in. The viewer refuses anything that isn't valid JSON, isn't a whole
 bundle, or is missing one of the four required files, and says which; a refusal
 changes nothing on screen. It opens with a warning instead when the dependency
 layer is absent, when per-theme values are missing, or when a link points at

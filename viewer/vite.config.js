@@ -56,8 +56,8 @@ export default defineConfig({
   define: {
     __SNAPSHOT_PATH__: JSON.stringify(hasSnapshot ? snapshotPath : null),
   },
-  // The example snapshot and lib/snapshot-graph.mjs live above this root,
-  // shared with the CLI so there's only one copy of each.
+  // example.snapshot.json and lib/snapshot-graph.mjs live above this root, at the
+  // repo root, shared with the CLI so there's only one copy of each.
   // PORT is honoured so a harness that assigns a port (rather than taking Vite's
   // own 5173-and-upwards search) opens the right one.
   server: {
