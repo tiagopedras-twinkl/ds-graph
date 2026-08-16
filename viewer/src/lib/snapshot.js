@@ -5,13 +5,15 @@
 //
 // The way in is the single .bundle.json, which holds the whole snapshot. A set of
 // loose snapshot files picked together assembles too, since it is the same map of
-// contract path -> parsed JSON that lib/snapshot-graph.mjs takes — but a file
-// picker cannot reach into tokens/, so the bundle is what the viewer asks for.
+// contract path -> parsed JSON that lib/snapshot-graph.mjs takes. A file picker
+// cannot reach into tokens/, which used to cost those tokens their per-theme values;
+// from contract 2.1.0 each token carries its own themes, so the files at the top of a
+// snapshot are enough. Below 2.1.0 the bundle is still the way in.
 //
 // The example is imported rather than fetched on demand because the production
 // build is a single HTML file meant to open from file://, where fetch() of a
 // sibling file is blocked. Anything the viewer needs offline has to be bundled.
-import example from "../../../snapshot/example.snapshot.json";
+import example from "../../../example.snapshot.json";
 import { SnapshotError, filesFromBundle, snapshotGraph } from "../../../lib/snapshot-graph.mjs";
 
 // The snapshot to open with, read from outside this repo at build time — see
