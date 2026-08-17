@@ -39,6 +39,36 @@ they go outside this repo. Regenerate it with
 [`tools/make-example-snapshot.mjs`](tools/make-example-snapshot.mjs) rather than
 editing it by hand. Real snapshot data is private — never commit or publish one.
 
+## The diagram doesn't know what a snapshot is either
+
+The same layering carries into the viewer, and this half of it isn't even in
+this repo any more. The diagram — the tree that lays itself out, expands on
+click and walks in either direction — lives in
+[`graph-engine`](https://github.com/tiagopedras/graph-engine), a private repo
+of its own, installed here as a normal dependency
+(`"graph-engine": "github:tiagopedras/graph-engine"` in `viewer/package.json`).
+It works on a plain `{ nodes, edges }` graph and never reads a node's `kind` or
+an edge's `type` as anything more than a string to colour by — it doesn't know
+a "component" from a "token", which is what let it move out in the first
+place: nothing about it was ever specific to a design-system snapshot.
+
+[`viewer/src/lib/graph.js`](viewer/src/lib/graph.js) is where that vocabulary
+lives instead: what a component, token or subcomponent is, what a design token
+value looks like, what `BINDS`/`ALIASES`/`NESTS`/`USES_TEXT_STYLE` mean, and
+the colours each kind gets on the map. It's the adapter that sits between
+ds-snapshot's data and `graph-engine`'s generic shape. The sidebar, the nav
+history and the right-hand inspector all stay in `viewer/src/components/` and
+depend on that vocabulary freely — only the diagram itself has to stay
+agnostic, and now it's enforced by being a separate repo rather than just a
+folder someone could reach into.
+
+Being on GitHub as a private repo, an `npm install` here needs read access to
+it — and it's worth noting that access is separate from whatever lets someone
+see this repo: `graph-engine` sits under Tiago's personal GitHub account, not
+the org this repo lives under, so a teammate who can already clone `ds-graph`
+may still need to be added to `graph-engine` before `npm install` works for
+them.
+
 ## Running it
 
 The viewer is the easiest way in: a searchable map with a plain-language impact

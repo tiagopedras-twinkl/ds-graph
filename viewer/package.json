@@ -13,6 +13,7 @@
     "cytoscape": "^3.34.0",
     "cytoscape-elk": "^2.3.0",
     "elkjs": "^0.12.0",
+    "graph-engine": "github:tiagopedras/graph-engine",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

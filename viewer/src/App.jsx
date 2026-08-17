@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "./components/Sidebar";
-import GraphView from "./components/GraphView";
 import ImpactPanel from "./components/ImpactPanel";
-import { loadGraph } from "./lib/graph";
+import { GraphView, loadGraph } from "graph-engine";
+import { KIND_COLOR } from "./lib/graph";
 import {
   describeSnapshot,
   emptyGraph,
@@ -246,6 +246,7 @@ function App() {
           <GraphView
             graph={graph}
             focusedId={focusedId}
+            kindColor={KIND_COLOR}
             onPreview={setPreviewId}
             canGoBack={nav.index > 0}
             canGoForward={nav.index < nav.history.length - 1}

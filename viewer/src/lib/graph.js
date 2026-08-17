@@ -1,9 +1,15 @@
-// Graph loading and traversal. Ported from ../../query.mjs.
-//
-// Edge direction convention: `from` depends on / uses `to`. So walking
-// outgoing edges from a node gives its dependencies (what it relies on);
-// walking incoming edges gives its dependents (what relies on it).
-//
+// The ds-snapshot vocabulary that sits on top of the generic graph-engine
+// package (https://github.com/tiagopedras/graph-engine, private): what a
+// "component", "token" or "subcomponent" is, what a design token value looks
+// like, and the BINDS/ALIASES/NESTS/USES_TEXT_STYLE edge types mean. None of
+// that lives in graph-engine itself — it only ever reads a node's `kind` or
+// an edge's `type` as an opaque string.
+import { dependents as engineDependents, dependencies as engineDependencies } from "graph-engine";
+
+export { loadGraph } from "graph-engine";
+export const dependents = engineDependents;
+export const dependencies = engineDependencies;
+
 // "subcomponent" isn't a real snapshot kind — it's a sidebar-only split of
 // "component" for names starting with ".", the Figma convention for a
 // component meant to be nested inside others rather than used on its own
@@ -12,20 +18,14 @@ export const KINDS = ["primitive", "token", "textStyle", "component", "subcompon
 
 export const isSubcomponent = (n) => n.kind === "component" && n.name?.startsWith(".");
 
-// `graphData` is the map read out of a snapshot — either the one bundled
-// at build time or one the user loaded at runtime. See lib/snapshot.js.
-export function loadGraph(graphData) {
-  const nodeById = new Map(graphData.nodes.map((n) => [n.id, n]));
-  const outgoing = new Map(); // from -> edges
-  const incoming = new Map(); // to -> edges
-  for (const e of graphData.edges) {
-    if (!outgoing.has(e.from)) outgoing.set(e.from, []);
-    outgoing.get(e.from).push(e);
-    if (!incoming.has(e.to)) incoming.set(e.to, []);
-    incoming.get(e.to).push(e);
-  }
-  return { nodes: graphData.nodes, edges: graphData.edges, nodeById, outgoing, incoming };
-}
+// Colours GraphView draws each kind's nodes in — GraphView itself only knows
+// "kind" is some string on a node; this is where that string gets meaning.
+export const KIND_COLOR = {
+  component: "#2563eb",
+  token: "#059669",
+  primitive: "#d97706",
+  textStyle: "#7c3aed",
+};
 
 // Design token values follow the Design Tokens standard, so a value is one of:
 // a reference to another token, written "{some.other.token}"; a colour object; a
@@ -58,38 +58,6 @@ export function aliasTarget(value) {
   if (typeof value !== "string") return null;
   const ref = value.match(/^\{([^{}]+)\}$/);
   return ref ? ref[1] : null;
-}
-
-// BFS in one direction, depth-limited. `edgeMap` is either `incoming`
-// (walk = dependents) or `outgoing` (walk = dependencies). `neighborId(e)`
-// picks the node id on the far side of the edge for that direction.
-function walk(startId, edgeMap, neighborId, maxDepth) {
-  const depthOf = new Map([[startId, 0]]);
-  const viaEdge = new Map();
-  const queue = [[startId, 0]];
-  while (queue.length) {
-    const [id, depth] = queue.shift();
-    if (depth >= maxDepth) continue;
-    for (const e of edgeMap.get(id) || []) {
-      const nid = neighborId(e);
-      if (depthOf.has(nid)) continue;
-      depthOf.set(nid, depth + 1);
-      viaEdge.set(nid, e);
-      queue.push([nid, depth + 1]);
-    }
-  }
-  depthOf.delete(startId);
-  return { depthOf, viaEdge };
-}
-
-// What depends on this node — reverse walk through incoming edges.
-export function dependents(graph, startId, maxDepth = Infinity) {
-  return walk(startId, graph.incoming, (e) => e.from, maxDepth);
-}
-
-// What this node depends on — forward walk through outgoing edges.
-export function dependencies(graph, startId, maxDepth = Infinity) {
-  return walk(startId, graph.outgoing, (e) => e.to, maxDepth);
 }
 
 // Full (unlimited depth) impact summary for the right-hand pane —
